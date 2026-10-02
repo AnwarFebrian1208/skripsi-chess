@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hasil Sentimen - Analisis Chess.com</title>
+    <meta name="description" content="Hasil analisis sentimen ulasan Chess.com menggunakan SVM. Lihat tabel hasil, confusion matrix, dan evaluasi model.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap">
+    <link rel="stylesheet" href="assets/style.css">
+    <style>
+        .result-shell { max-width: 1480px; width: 100%; }
+        .result-hero {
+            background: #1f1f1c;
+            color: #f4f4ef;
+            border-radius: 8px;
+            padding: 48px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(380px, 0.85fr);
+            gap: 48px;
+            align-items: center;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 18px 44px rgba(0,0,0,0.2);
+        }
+        .result-kicker { color: #9fca75; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.9rem; }
+        .result-title { font-size: clamp(2rem, 3vw, 2.8rem); line-height: 1.12; font-weight: 900; margin-top: 14px; }
+        .result-copy { color: #c8c8c0; line-height: 1.7; margin-top: 16px; font-size: 1.05rem; }
+        .result-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 28px; }
+        .summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+        .summary-card {
+            background: #1f1f1c;
+            color: #f4f4ef;
+            border-radius: 8px;
+            padding: 24px;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.15);
+            transition: transform 0.25s;
+        }
+        .summary-card:hover { transform: translateY(-2px); }
+        .summary-card i { font-size: 1.8rem; color: #81b64c; margin-bottom: 14px; display: block; }
+        .summary-card strong { display: block; font-size: 1.8rem; line-height: 1; margin-bottom: 6px; }
+        .summary-card span { color: #c8c8c0; font-weight: 800; font-size: 0.9rem; }
+
+        .donut-hero {
+            width: 280px;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: conic-gradient(#81b64c 0 52%, #4f86c6 52% 75%, #e05a47 75% 100%);
+            position: relative;
+            margin: 0 auto;
+        }
+        .donut-hero::after {
+            content: "";
+            position: absolute;
+            inset: 48px;
+            border-radius: 50%;
+            background: #1f1f1c;
+        }
+        .donut-hero-center {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            z-index: 1;
+            text-align: center;
+            font-weight: 900;
+            font-size: 1.4rem;
+        }
+        .donut-hero-center small { display: block; color: #c8c8c0; font-size: 0.85rem; margin-top: 4px; }
+
+        /* Table */
+        .result-table-section {
+            background: #1f1f1c;
+            border-radius: 8px;
+            padding: 28px;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.15);
+        }
+        .result-table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .result-table-header h2 { font-size: 1.3rem; color: #f4f4ef; }
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #302f2c;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            padding: 10px 16px;
+            min-width: 280px;
+            transition: border-color 0.2s;
+        }
+        .search-box:focus-within { border-color: #81b64c; }
+        .search-box i { color: #8f8f88; }
+        .search-box input {
+            border: 0;
+            background: transparent;
+            color: #fff;
+            outline: 0;
+            font-size: 0.95rem;
+            font-weight: 700;
+            width: 100%;
+            font-family: inherit;
+        }
+        .search-box input::placeholder { color: #6f6f68; }
+
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: auto;
+        }
+        .result-table thead th {
+            background: #262622;
+            color: #f3f3ee;
+            padding: 14px 16px;
+            font-weight: 800;
+            text-align: left;
+            font-size: 0.88rem;
+            white-space: nowrap;
+        }
+        .result-table tbody td {
+            padding: 13px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            color: #d9d8d2;
+            font-size: 0.92rem;
+            line-height: 1.5;
+            vertical-align: top;
+        }
+        .result-table tbody tr { transition: background 0.2s; }
+        .result-table tbody tr:hover { background: rgba(129, 182, 76, 0.06); }
+        .table-container-dark {
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        /* Confusion Matrix */
+        .eval-section {
+            background: #1f1f1c;
+            border-radius: 8px;
+            padding: 28px;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.15);
+        }
+        .eval-section h2 { font-size: 1.3rem; color: #f4f4ef; margin-bottom: 20px; }
+        .metric-eval-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 28px; }
+        .metric-eval-card {
+            background: #292824;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .metric-eval-card strong { display: block; font-size: 1.6rem; color: #81b64c; }
+        .metric-eval-card span { color: #c8c8c0; font-weight: 800; font-size: 0.85rem; }
+        .confusion-matrix {
+            display: grid;
+            grid-template-columns: 120px repeat(3, 1fr);
+            gap: 3px;
+            max-width: 600px;
+        }
+        .cm-header {
+            background: #262622;
+            color: #f3f3ee;
+            font-weight: 800;
+            font-size: 0.85rem;
+            padding: 12px;
+            text-align: center;
+            border-radius: 4px;
+        }
+        .cm-label {
+            background: #262622;
+            color: #f3f3ee;
+            font-weight: 800;
+            font-size: 0.85rem;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            border-radius: 4px;
+        }
+        .cm-cell {
+            background: #292824;
+            color: #d9d8d2;
+            font-weight: 800;
+            padding: 16px;
+            text-align: center;
+            font-size: 1.1rem;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        .cm-cell.cm-diag {
+            background: rgba(129, 182, 76, 0.2);
+            color: #a3d160;
+        }
+
+        /* Word Cloud */
+        .word-cloud {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .word-tag {
+            background: #292824;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-weight: 800;
+            transition: transform 0.2s, background 0.2s;
+        }
+        .word-tag:hover { transform: scale(1.05); background: #33322e; }
+
+        @media (max-width: 1100px) {
+            .result-hero { grid-template-columns: 1fr; }
+            .summary-grid, .metric-eval-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 700px) {
+            .summary-grid, .metric-eval-grid { grid-template-columns: 1fr; }
+            .result-hero { padding: 28px; }
+            .search-box { min-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+<aside class="sidebar" id="sidebar">
+    <a class="sidebar-brand" href="index.html">
+        <div class="brand-mark"><i class="fa-solid fa-chess-pawn"></i></div>
+        <div class="brand-text">Chess.com<small>Analisis Sentimen</small></div>
+    </a>
+    <nav class="sidebar-nav">
+        <a href="index.html"><i class="fa-solid fa-house"></i><span>Beranda</span></a>
+        <a href="dashboard.html"><i class="fa-solid fa-chess-board"></i><span>Dashboard</span></a>
+        <a href="result.html" class="active"><i class="fa-solid fa-chart-pie"></i><span>Hasil Sentimen</span></a>
+    </nav>
+    <div class="sidebar-status"><i class="fa-solid fa-circle-check"></i><span>Demo Online</span></div>
+</aside>
+<button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar"><i class="fa-solid fa-chevron-left"></i></button>
+
+<main class="main-content">
+    <h1 class="header-title">Hasil Analisis Sentimen</h1>
+
+    <div class="page-stack result-shell">
+        <!-- Hero -->
+        <section class="result-hero">
+            <div>
+                <div class="result-kicker">Klasifikasi SVM</div>
+                <div class="result-title">Distribusi Sentimen Ulasan Chess.com</div>
+                <div class="result-copy">Total 5100 ulasan telah diklasifikasikan menjadi positif, netral, dan negatif menggunakan model Support Vector Machine (SVM) dengan fitur TF-IDF.</div>
+                <div class="result-actions">
+                    <a class="btn-action" href="dashboard.html"><i class="fa-solid fa-chess-board"></i> Dashboard</a>
+                    <a class="btn-action" href="index.html"><i class="fa-solid fa-arrow-left"></i> Kembali</a>
+                </div>
+            </div>
+            <div>
+                <div class="donut-hero">
+                    <div class="donut-hero-center">
+                        <div>5100<small>hasil prediksi</small></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Summary Cards -->
+        <div class="summary-grid">
+            <div class="summary-card"><i class="fa-solid fa-comments"></i><strong>5100</strong><span>Total Ulasan</span></div>
+            <div class="summary-card"><i class="fa-solid fa-face-smile"></i><strong>2652</strong><span>Positif (52%)</span></div>
+            <div class="summary-card"><i class="fa-solid fa-face-meh"></i><strong>1173</strong><span>Netral (23%)</span></div>
+            <div class="summary-card"><i class="fa-solid fa-face-frown"></i><strong>1275</strong><span>Negatif (25%)</span></div>
+        </div>
+
+        <!-- Word Cloud -->
+        <section class="eval-section">
+            <h2><i class="fa-solid fa-cloud" style="color:#81b64c; margin-right:8px;"></i> Kata Terbanyak dalam Ulasan</h2>
+            <div class="word-cloud">
+                <span class="word-tag" style="font-size: 2rem; color: #81b64c;">main</span>
+                <span class="word-tag" style="font-size: 1.7rem; color: #a3d160;">bagus</span>
+                <span class="word-tag" style="font-size: 1.5rem; color: #4f86c6;">fitur</span>
+                <span class="word-tag" style="font-size: 1.4rem; color: #e05a47;">iklan</span>
+                <span class="word-tag" style="font-size: 1.3rem; color: #c8c8c0;">suka</span>
+                <span class="word-tag" style="font-size: 1.2rem; color: #81b64c;">belajar</span>
+                <span class="word-tag" style="font-size: 1.15rem; color: #4f86c6;">online</span>
+                <span class="word-tag" style="font-size: 1.1rem; color: #e05a47;">lambat</span>
+                <span class="word-tag" style="font-size: 1.05rem; color: #a3d160;">puzzle</span>
+                <span class="word-tag" style="font-size: 1rem; color: #c8c8c0;">rating</span>
+            </div>
+        </section>
+
+        <!-- Data Table -->
+        <section class="result-table-section">
+            <div class="result-table-header">
+                <h2><i class="fa-solid fa-table" style="color:#81b64c; margin-right:8px;"></i> Tabel Hasil Sentimen</h2>
+                <div class="search-box">
+                    <i class="fa-solid fa-search"></i>
+                    <input type="text" placeholder="Cari ulasan..." id="searchInput">
+                </div>
+            </div>
+            <div class="table-container-dark">
+                <table class="result-table" id="resultTable">
+                    <thead>
+                        <tr>
+                            <th style="width:40px">No</th>
+                            <th style="width:120px">Pengguna</th>
+                            <th>Ulasan Asli</th>
+                            <th>Ulasan Bersih</th>
+                            <th style="width:60px">Rating</th>
+                            <th style="width:90px">Sentimen</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultBody">
+                        <tr><td>1</td><td>John_chess99</td><td>Game catur yang bagus! Sangat seru main setiap hari 🎉</td><td>game catur bagus sangat seru main setiap hari</td><td>5</td><td><span class="badge badge-positif">Positif</span></td></tr>
+                        <tr><td>2</td><td>MasterPawn</td><td>Aplikasi lumayan, fitur cukup lengkap.</td><td>aplikasi lumayan fitur cukup lengkap</td><td>3</td><td><span class="badge badge-netral">Netral</span></td></tr>
+                        <tr><td>3</td><td>ChessNewbie</td><td>Iklan terlalu banyak! Mengganggu permainan saya.</td><td>iklan terlalu banyak mengganggu permainan</td><td>1</td><td><span class="badge badge-negatif">Negatif</span></td></tr>
+                        <tr><td>4</td><td>ProGamer42</td><td>Terbaik! Aplikasi catur ini puzzle harian-nya menarik.</td><td>terbaik aplikasi catur puzzle harian menarik</td><td>5</td><td><span class="badge badge-positif">Positif</span></td></tr>
+                        <tr><td>5</td><td>CasualPlayer</td><td>Suka main catur online. Fitur analisis sangat membantu!</td><td>suka main catur online fitur analisis membantu</td><td>4</td><td><span class="badge badge-positif">Positif</span></td></tr>
+                        <tr><td>6</td><td>RookMaster</td><td>Aplikasinya crash terus di HP saya. Tolong diperbaiki.</td><td>aplikasi crash terus hp tolong diperbaiki</td><td>1</td><td><span class="badge badge-negatif">Negatif</span></td></tr>
+                        <tr><td>7</td><td>ChessKid_ID</td><td>Oke lah buat belajar catur pemula.</td><td>oke belajar catur pemula</td><td>3</td><td><span class="badge badge-netral">Netral</span></td></tr>
+                        <tr><td>8</td><td>GrandMstr</td><td>Sangat bagus! Fitur lesson dan taktik top tier.</td><td>sangat bagus fitur lesson taktik top tier</td><td>5</td><td><span class="badge badge-positif">Positif</span></td></tr>
+                        <tr><td>9</td><td>NightKnight</td><td>Biasa aja sih, ada plus minusnya.</td><td>biasa ada plus minus</td><td>3</td><td><span class="badge badge-netral">Netral</span></td></tr>
+                        <tr><td>10</td><td>PawnStar</td><td>Premium terlalu mahal! Banyak fitur dikunci.</td><td>premium mahal banyak fitur dikunci</td><td>2</td><td><span class="badge badge-negatif">Negatif</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div style="text-align:center; padding:18px; color:#8f8f88; font-weight:700; font-size:0.9rem;">
+                Menampilkan 10 data contoh dari 5100 total &mdash; Versi demo statis
+            </div>
+        </section>
+
+        <!-- Evaluation / Confusion Matrix -->
+        <section class="eval-section">
+            <h2><i class="fa-solid fa-flask" style="color:#81b64c; margin-right:8px;"></i> Evaluasi Model SVM</h2>
+            <div class="metric-eval-grid">
+                <div class="metric-eval-card"><strong>87.4%</strong><span>Accuracy</span></div>
+                <div class="metric-eval-card"><strong>86.2%</strong><span>Precision (Avg)</span></div>
+                <div class="metric-eval-card"><strong>85.8%</strong><span>Recall (Avg)</span></div>
+                <div class="metric-eval-card"><strong>86.0%</strong><span>F1-Score (Avg)</span></div>
+            </div>
+            <h2 style="margin-bottom:16px;"><i class="fa-solid fa-table-cells" style="color:#4f86c6; margin-right:8px;"></i> Confusion Matrix</h2>
+            <div class="confusion-matrix">
+                <div class="cm-header"></div>
+                <div class="cm-header">Negatif</div>
+                <div class="cm-header">Netral</div>
+                <div class="cm-header">Positif</div>
+                <div class="cm-label">Negatif</div>
+                <div class="cm-cell cm-diag">218</div>
+                <div class="cm-cell">15</div>
+                <div class="cm-cell">22</div>
+                <div class="cm-label">Netral</div>
+                <div class="cm-cell">18</div>
+                <div class="cm-cell cm-diag">196</div>
+                <div class="cm-cell">21</div>
+                <div class="cm-label">Positif</div>
+                <div class="cm-cell">12</div>
+                <div class="cm-cell">17</div>
+                <div class="cm-cell cm-diag">501</div>
+            </div>
+        </section>
+    </div>
+</main>
+<script src="assets/app.js"></script>
+<script>
+    // Simple search filter for demo
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const q = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#resultBody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(q) ? '' : 'none';
+            });
+        });
+    }
+</script>
+</body>
+</html>
