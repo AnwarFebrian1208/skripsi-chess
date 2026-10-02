@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analisis Sentimen Chess.com</title>
+    <meta name="description" content="Sistem analisis sentimen ulasan aplikasi Chess.com dari Google Play Store menggunakan metode SVM (Support Vector Machine). Lihat distribusi sentimen positif, netral, dan negatif.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #302f2c;
+            color: #ffffff;
+            font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .landing-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background:
+                radial-gradient(circle at 74% 22%, rgba(129, 182, 76, 0.13), transparent 32%),
+                linear-gradient(180deg, #302f2c 0%, #252522 100%);
+        }
+
+        .landing-nav {
+            width: min(1240px, calc(100% - 48px));
+            margin: 0 auto;
+            padding: 30px 0 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.65rem;
+            font-weight: 900;
+            letter-spacing: 0;
+            white-space: nowrap;
+        }
+
+        .brand-mark {
+            width: 42px;
+            height: 42px;
+            border-radius: 8px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(180deg, #8bc34a, #6fae42);
+            box-shadow: inset 0 1px rgba(255, 255, 255, 0.25), 0 5px 0 #4d7f2c;
+        }
+
+        .brand-mark i {
+            font-size: 1.45rem;
+        }
+
+        .brand span:last-child {
+            color: #f7f7f2;
+        }
+
+        .brand small {
+            color: #deded6;
+            font-size: 1rem;
+            font-weight: 800;
+            margin-left: -6px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 14px;
+            color: #deded6;
+            font-weight: 800;
+        }
+
+        .nav-link {
+            padding: 12px 14px;
+            border-radius: 8px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.07);
+            color: #ffffff;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border: 0;
+            border-radius: 8px;
+            min-height: 56px;
+            padding: 15px 24px;
+            font-size: 1rem;
+            font-weight: 900;
+            line-height: 1.2;
+            cursor: pointer;
+            transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            color: #ffffff;
+            background: linear-gradient(180deg, #81b64c, #6fae42);
+            box-shadow: inset 0 1px rgba(255, 255, 255, 0.22), 0 5px 0 #4d7f2c;
+        }
+
+        .btn-secondary {
+            color: #f7f7f2;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.26);
+            box-shadow: inset 0 1px rgba(255, 255, 255, 0.06);
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(180deg, #91c95a, #75b447);
+        }
+
+        .btn-secondary:hover {
+            border-color: rgba(255, 255, 255, 0.44);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .hero {
+            width: min(1240px, calc(100% - 48px));
+            margin: 0 auto;
+            flex: 1;
+            display: grid;
+            grid-template-columns: minmax(0, 0.92fr) minmax(420px, 1.08fr);
+            align-items: center;
+            gap: clamp(56px, 7vw, 92px);
+            padding: 70px 0 96px;
+        }
+
+        .hero-copy {
+            max-width: 650px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            color: #a3d160;
+            font-size: 0.92rem;
+            font-weight: 900;
+            letter-spacing: 0;
+            text-transform: uppercase;
+            margin-bottom: 18px;
+        }
+
+        .eyebrow i {
+            color: #81b64c;
+        }
+
+        .hero h1 {
+            color: #ffffff;
+            font-size: clamp(3.15rem, 5.6vw, 5.45rem);
+            line-height: 1.02;
+            font-weight: 950;
+            letter-spacing: 0;
+            margin-bottom: 28px;
+        }
+
+        .hero p {
+            max-width: 590px;
+            color: #deded6;
+            font-size: 1.26rem;
+            line-height: 1.72;
+            font-weight: 700;
+            margin-bottom: 34px;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 42px;
+        }
+
+        .hero-points {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            max-width: 680px;
+        }
+
+        .hero-point {
+            min-height: 112px;
+            border-radius: 8px;
+            padding: 20px;
+            background: rgba(37, 37, 34, 0.78);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #deded6;
+            font-weight: 800;
+            line-height: 1.45;
+            transition: transform 0.25s ease, border-color 0.25s ease;
+        }
+
+        .hero-point:hover {
+            transform: translateY(-3px);
+            border-color: rgba(129, 182, 76, 0.3);
+        }
+
+        .hero-point i {
+            display: block;
+            color: #81b64c;
+            font-size: 1.25rem;
+            margin-bottom: 9px;
+        }
+
+        .hero-visual {
+            position: relative;
+            min-height: 620px;
+            display: grid;
+            place-items: center;
+        }
+
+        .gif-frame {
+            width: min(100%, 590px);
+            aspect-ratio: 1 / 1;
+            border-radius: 8px;
+            padding: 22px;
+            display: grid;
+            place-items: center;
+            background:
+                linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.01)),
+                #252522;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.36), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+        }
+
+        .gif-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            border-radius: 8px;
+        }
+
+        .floating-card {
+            position: absolute;
+            right: 0;
+            bottom: 22px;
+            width: min(315px, 48%);
+            border-radius: 8px;
+            padding: 22px;
+            background: rgba(37, 37, 34, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 18px 42px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(8px);
+            animation: floatUp 0.8s ease-out both;
+            animation-delay: 0.5s;
+        }
+
+        @keyframes floatUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .floating-card strong {
+            display: block;
+            color: #ffffff;
+            font-size: 1.12rem;
+            line-height: 1.25;
+            margin-bottom: 8px;
+        }
+
+        .floating-card span {
+            color: #c8c8c0;
+            font-size: 0.95rem;
+            font-weight: 700;
+            line-height: 1.45;
+        }
+
+        /* Demo banner */
+        .demo-banner {
+            width: min(1240px, calc(100% - 48px));
+            margin: 12px auto 0;
+            border-radius: 8px;
+            padding: 14px 18px;
+            background: linear-gradient(135deg, #4f86c6, #3d648f);
+            color: #fff;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideDown 0.5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Login Modal */
+        .login-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: none;
+            place-items: center;
+            padding: 24px;
+            background: rgba(0, 0, 0, 0.66);
+            backdrop-filter: blur(4px);
+        }
+
+        .login-modal.is-open {
+            display: grid;
+        }
+
+        .login-dialog {
+            width: min(100%, 560px);
+            border-radius: 8px;
+            padding: 34px;
+            background:
+                linear-gradient(150deg, rgba(255,255,255,0.04), rgba(255,255,255,0)),
+                #252522;
+            color: #f4f4ef;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.48);
+            position: relative;
+            animation: modalIn 0.3s ease-out;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .login-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 38px;
+            height: 38px;
+            border: 0;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            background: #3a3934;
+            color: #deded6;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s;
+        }
+
+        .login-close:hover {
+            background: #4a4944;
+        }
+
+        .modal-brand {
+            justify-content: center;
+            margin-bottom: 28px;
+        }
+
+        .modal-form {
+            display: grid;
+            gap: 16px;
+        }
+
+        .modal-field {
+            min-height: 58px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: #302f2c;
+            display: grid;
+            grid-template-columns: 44px 1fr;
+            align-items: center;
+            padding: 0 14px;
+            transition: border-color 0.2s;
+        }
+
+        .modal-field:focus-within {
+            border-color: #81b64c;
+        }
+
+        .modal-field i {
+            color: #a8a8a0;
+            font-size: 1.1rem;
+        }
+
+        .modal-field input {
+            width: 100%;
+            border: 0;
+            background: transparent;
+            color: #ffffff;
+            outline: 0;
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: inherit;
+        }
+
+        .modal-field input::placeholder {
+            color: #8f8f88;
+        }
+
+        .modal-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            color: #c8c8c0;
+            font-weight: 700;
+            margin: 4px 0 10px;
+        }
+
+        .modal-row label {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .modal-row input {
+            accent-color: #81b64c;
+            width: 18px;
+            height: 18px;
+        }
+
+        .modal-info {
+            border-radius: 8px;
+            padding: 12px 14px;
+            background: rgba(79, 134, 198, 0.2);
+            color: #b8d4f0;
+            font-weight: 800;
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+
+        .modal-submit {
+            width: 100%;
+            min-height: 64px;
+            margin-top: 6px;
+            font-size: 1.2rem;
+        }
+
+        /* Footer */
+        .landing-footer {
+            width: min(1240px, calc(100% - 48px));
+            margin: 0 auto;
+            padding: 24px 0 40px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            color: #8f8f88;
+            font-weight: 700;
+            font-size: 0.88rem;
+        }
+
+        .landing-footer a {
+            color: #a3d160;
+            transition: color 0.2s;
+        }
+
+        .landing-footer a:hover {
+            color: #c4e88a;
+        }
+
+        @media (max-width: 980px) {
+            .landing-nav {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .nav-links {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .hero {
+                grid-template-columns: 1fr;
+                gap: 50px;
+                padding: 42px 0 72px;
+            }
+
+            .hero-copy {
+                max-width: none;
+            }
+
+            .hero-visual {
+                min-height: auto;
+            }
+
+            .gif-frame {
+                max-width: 620px;
+            }
+        }
+
+        @media (max-width: 680px) {
+            .landing-nav,
+            .hero {
+                width: min(100% - 32px, 1240px);
+            }
+
+            .nav-links {
+                align-items: stretch;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .nav-link,
+            .nav-links .btn {
+                width: 100%;
+            }
+
+            .hero h1 {
+                font-size: 2.75rem;
+            }
+
+            .hero p {
+                font-size: 1.08rem;
+            }
+
+            .hero-actions,
+            .hero-actions .btn {
+                width: 100%;
+            }
+
+            .hero-points {
+                grid-template-columns: 1fr;
+            }
+
+            .gif-frame {
+                padding: 12px;
+            }
+
+            .floating-card {
+                position: static;
+                width: 100%;
+                margin-top: 14px;
+            }
+
+            .login-dialog {
+                padding: 26px;
+            }
+
+            .landing-footer {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="landing-page">
+        <header class="landing-nav">
+            <a class="brand" href="index.html" aria-label="Landing Analisis Sentimen Chess.com">
+                <span class="brand-mark"><i class="fa-solid fa-chess-pawn"></i></span>
+                <span>Chess<small>.com</small></span>
+            </a>
+            <nav class="nav-links" aria-label="Navigasi landing">
+                <a class="nav-link" href="dashboard.html">Lihat Analisis</a>
+                <a class="nav-link" href="result.html">Hasil Sentimen</a>
+                <button class="btn btn-secondary" type="button" data-open-login><i class="fa-solid fa-user-shield"></i> Login Admin</button>
+            </nav>
+        </header>
+
+        <div class="demo-banner">
+            <i class="fa-solid fa-circle-info"></i>
+            Ini adalah versi demo statis. Fitur backend (database, login, analisis) tidak tersedia di versi ini.
+        </div>
+
+        <main class="hero">
+            <section class="hero-copy" aria-labelledby="landing-title">
+                <div class="eyebrow"><i class="fa-solid fa-chart-line"></i> Analisis ulasan aplikasi Chess</div>
+                <h1 id="landing-title">Lihat sentimen pengguna aplikasi Chess.</h1>
+                <p>Lihat ringkasan hasil analisis ulasan pengguna, atau masuk sebagai admin untuk mengelola data dan menjalankan proses analisis.</p>
+                <div class="hero-actions">
+                    <a class="btn btn-primary" href="dashboard.html"><i class="fa-solid fa-chart-pie"></i> Lihat Analisis</a>
+                    <button class="btn btn-secondary" type="button" data-open-login><i class="fa-solid fa-user-shield"></i> Login sebagai Admin</button>
+                </div>
+                <div class="hero-points" aria-label="Fitur utama">
+                    <div class="hero-point"><i class="fa-solid fa-chess-board"></i> Ringkasan sentimen dapat dilihat tanpa login.</div>
+                    <div class="hero-point"><i class="fa-solid fa-broom-ball"></i> Admin dapat mengelola data dan menjalankan analisis.</div>
+                    <div class="hero-point"><i class="fa-solid fa-tags"></i> Ulasan dikelompokkan menjadi positif, netral, dan negatif.</div>
+                </div>
+            </section>
+
+            <section class="hero-visual" aria-label="Visual tutorial catur">
+                <div class="gif-frame">
+                    <img src="gif-tutorial-catur.gif" alt="GIF tutorial catur Chess.com" loading="lazy">
+                </div>
+                <div class="floating-card">
+                    <strong>Analisis ulasan pengguna aplikasi Chess.</strong>
+                    <span>Lihat hasil analisis atau masuk sebagai admin untuk mengelola data.</span>
+                </div>
+            </section>
+        </main>
+
+        <footer class="landing-footer">
+            <span>&copy; 2026 Analisis Sentimen Chess.com &mdash; Skripsi</span>
+            <span>Dibuat dengan <i class="fa-solid fa-heart" style="color:#e05a47"></i> menggunakan SVM</span>
+        </footer>
+    </div>
+
+    <!-- Login Modal (Demo) -->
+    <div class="login-modal" id="loginModal" aria-hidden="true">
+        <div class="login-dialog" role="dialog" aria-modal="true" aria-labelledby="adminLoginTitle">
+            <button class="login-close" type="button" data-close-login aria-label="Tutup login"><i class="fa-solid fa-xmark"></i></button>
+            <div class="brand modal-brand">
+                <span class="brand-mark"><i class="fa-solid fa-chess-pawn"></i></span>
+                <span>Chess<small>.com</small></span>
+            </div>
+            <div class="modal-form">
+                <div class="modal-field">
+                    <i class="fa-solid fa-user"></i>
+                    <input id="adminLoginTitle" type="text" placeholder="Username admin" autocomplete="username">
+                </div>
+                <div class="modal-field">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" placeholder="Password" autocomplete="current-password">
+                </div>
+                <div class="modal-row">
+                    <label><input type="checkbox"> Ingat saya</label>
+                    <span>Khusus admin</span>
+                </div>
+                <div class="modal-info">
+                    <i class="fa-solid fa-info-circle"></i> Ini adalah versi demo statis. Login tidak tersedia. Silakan lihat dashboard dan hasil analisis sebagai pengunjung.
+                </div>
+                <a class="btn btn-primary modal-submit" href="dashboard.html">Masuk sebagai Pengunjung</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            const modal = document.getElementById('loginModal');
+            const openers = document.querySelectorAll('[data-open-login]');
+            const closers = document.querySelectorAll('[data-close-login]');
+
+            function openModal() {
+                modal.classList.add('is-open');
+                modal.setAttribute('aria-hidden', 'false');
+            }
+
+            function closeModal() {
+                modal.classList.remove('is-open');
+                modal.setAttribute('aria-hidden', 'true');
+            }
+
+            openers.forEach((button) => button.addEventListener('click', openModal));
+            closers.forEach((button) => button.addEventListener('click', closeModal));
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) closeModal();
+            });
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') closeModal();
+            });
+        })();
+    </script>
+</body>
+</html>
