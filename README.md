@@ -4,7 +4,7 @@ Sistem analisis sentimen ulasan aplikasi Chess.com dari Google Play Store menggu
 
 ## 🌐 Demo Online
 
-Kunjungi versi demo statis di: **[GitHub Pages](https://anwarfebrian1208.github.io/skripsi-chess/)**
+Kunjungi versi demo statis di: **[GitHub Pages](https://AnwarFebrian1208.github.io/skripsi-chess/)**
 
 > ⚠️ Versi demo hanya menampilkan tampilan website. Fitur backend (database, login, analisis) memerlukan server PHP + MySQL.
 
@@ -49,3 +49,4 @@ skripsi_chess/
 ## 🚀 Setup Lokal
 
 Lihat file `README_SETUP.txt` untuk panduan instalasi lengkap.
+
