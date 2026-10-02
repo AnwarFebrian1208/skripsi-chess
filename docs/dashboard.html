@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Analisis Sentimen SVM - Chess.com</title>
+    <meta name="description" content="Dashboard analisis sentimen ulasan Chess.com. Lihat distribusi sentimen, rating, dan aktivitas komentar terbaru.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap">
+    <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<aside class="sidebar" id="sidebar">
+    <a class="sidebar-brand" href="index.html">
+        <div class="brand-mark"><i class="fa-solid fa-chess-pawn"></i></div>
+        <div class="brand-text">Chess.com<small>Analisis Sentimen</small></div>
+    </a>
+    <nav class="sidebar-nav">
+        <a href="index.html"><i class="fa-solid fa-house"></i><span>Beranda</span></a>
+        <a href="dashboard.html" class="active"><i class="fa-solid fa-chess-board"></i><span>Dashboard</span></a>
+        <a href="result.html"><i class="fa-solid fa-chart-pie"></i><span>Hasil Sentimen</span></a>
+    </nav>
+    <div class="sidebar-status"><i class="fa-solid fa-circle-check"></i><span>Demo Online</span></div>
+</aside>
+<button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar"><i class="fa-solid fa-chevron-left"></i></button>
+
+<main class="main-content">
+    <h1 class="header-title">Dashboard Publik</h1>
+
+    <div class="page-stack dashboard-shell">
+        <!-- Hero -->
+        <section class="dashboard-hero">
+            <div>
+                <div class="hero-kicker">Ringkasan Ulasan Chess.com</div>
+                <div class="hero-title">Analisis sentimen ulasan Chess.com dari Google Play Store.</div>
+                <div class="hero-copy">Lihat distribusi sentimen, ringkasan rating, dan hasil terbaru dari ulasan pengguna Chess.com.</div>
+                <div class="hero-actions">
+                    <a class="btn-action" href="result.html"><i class="fa-solid fa-chart-pie"></i> Lihat Hasil</a>
+                    <a class="btn-action" href="index.html"><i class="fa-solid fa-house"></i> Kembali Beranda</a>
+                </div>
+            </div>
+            <div class="hero-visuals">
+                <div class="hero-media">
+                    <img src="penguin-chessboard.gif" alt="Tutorial catur" loading="lazy">
+                </div>
+            </div>
+        </section>
+
+        <!-- Pipeline -->
+        <div class="pipeline-mini">
+            <div class="pipeline-item"><div class="pipeline-icon"><i class="fa-solid fa-database"></i></div><div><div class="pipeline-label">Dataset</div><div class="pipeline-note">5100 ulasan tersimpan.</div></div></div>
+            <div class="pipeline-item"><div class="pipeline-icon"><i class="fa-solid fa-broom"></i></div><div><div class="pipeline-label">Preprocessing</div><div class="pipeline-note">5100 ulasan sudah dibersihkan.</div></div></div>
+            <div class="pipeline-item"><div class="pipeline-icon"><i class="fa-solid fa-tags"></i></div><div><div class="pipeline-label">Prediksi</div><div class="pipeline-note">5100 ulasan sudah memiliki label.</div></div></div>
+        </div>
+
+        <!-- Visual Feature -->
+        <section class="visual-feature">
+            <div class="visual-frame">
+                <img src="gambar-catur.webp" alt="Visual catur" loading="lazy">
+            </div>
+            <div>
+                <div class="hero-kicker">Alur Analisis</div>
+                <div class="feature-title">Proses analisis sentimen ulasan.</div>
+                <div class="feature-copy">Ulasan dari Google Play Store dibersihkan, diubah menjadi fitur TF-IDF, lalu diklasifikasikan menggunakan model SVM.</div>
+                <div class="feature-points">
+                    <div class="feature-point"><i class="fa-solid fa-check"></i> Impor dataset hasil scraping</div>
+                    <div class="feature-point"><i class="fa-solid fa-check"></i> Bandingkan ulasan asli dan hasil preprocessing</div>
+                    <div class="feature-point"><i class="fa-solid fa-check"></i> Lihat sentimen, rating, dan evaluasi model</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Insight Grid -->
+        <div class="insight-grid">
+            <div class="metric-card-dark"><i class="fa-solid fa-comments"></i><div><strong>5100</strong><span>Total Ulasan Dianalisis</span><p>Jumlah ulasan yang tersimpan dalam dataset.</p></div></div>
+            <div class="metric-card-dark"><i class="fa-solid fa-route"></i><div><strong>Lengkap</strong><span>Status Proses</span><p>Seluruh data telah diproses dan diprediksi.</p></div></div>
+            <div class="metric-card-dark"><i class="fa-solid fa-trophy"></i><div><strong>Positif</strong><span>Sentimen Dominan</span><p>52% dari hasil prediksi saat ini.</p></div></div>
+        </div>
+
+        <!-- Sentiment + Latest -->
+        <div class="dashboard-grid">
+            <section class="sentiment-panel">
+                <div class="donut" id="donutChart">
+                    <div class="donut-center">
+                        <div>5100<span>hasil</span></div>
+                    </div>
+                </div>
+                <div class="sentiment-list">
+                    <div class="sentiment-row">
+                        <span class="legend-dot" style="background: #81b64c"></span>
+                        <span>Positif</span>
+                        <div class="track"><div class="fill" style="width: 52%; background: #81b64c"></div></div>
+                        <span>52%</span>
+                    </div>
+                    <div class="sentiment-row">
+                        <span class="legend-dot" style="background: #4f86c6"></span>
+                        <span>Netral</span>
+                        <div class="track"><div class="fill" style="width: 23%; background: #4f86c6"></div></div>
+                        <span>23%</span>
+                    </div>
+                    <div class="sentiment-row">
+                        <span class="legend-dot" style="background: #e05a47"></span>
+                        <span>Negatif</span>
+                        <div class="track"><div class="fill" style="width: 25%; background: #e05a47"></div></div>
+                        <span>25%</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card latest-panel">
+                <div class="table-title">Hasil Terbaru</div>
+                <div class="latest-list">
+                    <div class="latest-item">
+                        <div>
+                            <div class="latest-user">John_chess99 - Rating 5</div>
+                            <div class="latest-text">game catur bagus sangat seru main setiap hari</div>
+                        </div>
+                        <div><span class="badge badge-positif">Positif</span></div>
+                    </div>
+                    <div class="latest-item">
+                        <div>
+                            <div class="latest-user">MasterPawn - Rating 3</div>
+                            <div class="latest-text">aplikasi lumayan fitur cukup lengkap</div>
+                        </div>
+                        <div><span class="badge badge-netral">Netral</span></div>
+                    </div>
+                    <div class="latest-item">
+                        <div>
+                            <div class="latest-user">ChessNewbie - Rating 1</div>
+                            <div class="latest-text">iklan terlalu banyak mengganggu permainan</div>
+                        </div>
+                        <div><span class="badge badge-negatif">Negatif</span></div>
+                    </div>
+                    <div class="latest-item">
+                        <div>
+                            <div class="latest-user">ProGamer42 - Rating 5</div>
+                            <div class="latest-text">terbaik aplikasi catur puzzle harian menarik</div>
+                        </div>
+                        <div><span class="badge badge-positif">Positif</span></div>
+                    </div>
+                    <div class="latest-item">
+                        <div>
+                            <div class="latest-user">CasualPlayer - Rating 4</div>
+                            <div class="latest-text">suka main catur online fitur analisis membantu</div>
+                        </div>
+                        <div><span class="badge badge-positif">Positif</span></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Charts -->
+        <div class="chart-grid">
+            <section class="chart-card-dark">
+                <div class="chart-heading">
+                    <h2>Komposisi Sentimen</h2>
+                    <span>jumlah &amp; persentase</span>
+                </div>
+                <div class="horizontal-bars">
+                    <div class="horizontal-row">
+                        <span>Positif</span>
+                        <div class="track"><div class="fill" style="width: 52%; background: #81b64c"></div></div>
+                        <span>2652</span>
+                    </div>
+                    <div class="horizontal-row">
+                        <span>Netral</span>
+                        <div class="track"><div class="fill" style="width: 23%; background: #4f86c6"></div></div>
+                        <span>1173</span>
+                    </div>
+                    <div class="horizontal-row">
+                        <span>Negatif</span>
+                        <div class="track"><div class="fill" style="width: 25%; background: #e05a47"></div></div>
+                        <span>1275</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="chart-card-dark">
+                <div class="chart-heading">
+                    <h2>Distribusi Rating</h2>
+                    <span>rating 1-5</span>
+                </div>
+                <div class="rating-chart">
+                    <div class="rating-column">
+                        <div class="rating-bar-wrap"><div class="rating-bar" style="height: 38%;"></div></div>
+                        <div>1★<br>612</div>
+                    </div>
+                    <div class="rating-column">
+                        <div class="rating-bar-wrap"><div class="rating-bar" style="height: 22%;"></div></div>
+                        <div>2★<br>358</div>
+                    </div>
+                    <div class="rating-column">
+                        <div class="rating-bar-wrap"><div class="rating-bar" style="height: 30%;"></div></div>
+                        <div>3★<br>489</div>
+                    </div>
+                    <div class="rating-column">
+                        <div class="rating-bar-wrap"><div class="rating-bar" style="height: 55%;"></div></div>
+                        <div>4★<br>891</div>
+                    </div>
+                    <div class="rating-column">
+                        <div class="rating-bar-wrap"><div class="rating-bar" style="height: 100%;"></div></div>
+                        <div>5★<br>2750</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Daily Activity -->
+        <section class="chart-card-dark">
+            <div class="chart-heading">
+                <h2>Aktivitas Komentar Terbaru</h2>
+                <span>7 tanggal terakhir dari dataset</span>
+            </div>
+            <div class="daily-chart">
+                <div class="daily-column">
+                    <div class="daily-bar-wrap"><div class="daily-bar" style="height: 45%;"></div></div>
+                    <div>24 Sep<br>128</div>
+                </div>
+                <div class="daily-column">
+                    <div class="daily-bar-wrap"><div class="daily-bar" style="height: 62%;"></div></div>
+                    <div>25 Sep<br>176</div>
+                </div>
+                <div class="daily-column">
+                    <div class="daily-bar-wrap"><div class="daily-bar" style="height: 38%;"></div></div>
+                    <div>26 Sep<br>108</div>
+                </div>
+                <div class="daily-column">
+                    <div class="daily-bar-wrap"><div class="daily-bar" style="height: 100%;"></div></div>
+                    <div>27 Sep<br>284</div>
+                </div>
+                <div class="daily-column">
+                    <div class="daily-bar-wrap"><div class="daily-bar" style="height: 72%;"></div></div>
+                    <div>28 Sep<br>205</div>
+                </div>
+                <div class="daily-column">
+                    <div class="daily-bar-wrap"><div class="daily-bar" style="height: 55%;"></div></div>
+                    <div>29 Sep<br>156</div>
+                </div>
+                <div class="daily-column">
+                    <div class="daily-bar-wrap"><div class="daily-bar" style="height: 80%;"></div></div>
+                    <div>30 Sep<br>227</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Links -->
+        <div class="quick-links">
+            <a class="quick-link" href="index.html"><i class="fa-solid fa-house"></i> Beranda Utama</a>
+            <a class="quick-link" href="result.html"><i class="fa-solid fa-chart-column"></i> Hasil Sentimen</a>
+            <a class="quick-link" href="result.html"><i class="fa-solid fa-file-export"></i> Pratinjau Statistik</a>
+            <a class="quick-link" href="index.html"><i class="fa-solid fa-arrow-left"></i> Kembali Landing</a>
+        </div>
+    </div>
+</main>
+<script src="assets/app.js"></script>
+</body>
+</html>
