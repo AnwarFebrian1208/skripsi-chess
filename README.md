@@ -18,7 +18,7 @@ Kunjungi versi demo statis di: **[GitHub Pages](https://AnwarFebrian1208.github.
 
 ## 🛠️ Teknologi
 
-- **Backend**: PHP 8.x, MySQL
+- **Backend**: PHP 8.2.12, MySQL
 - **Machine Learning**: Python (scikit-learn, SVM)
 - **Frontend**: HTML, CSS, JavaScript
 - **Icons**: Font Awesome 6.4
